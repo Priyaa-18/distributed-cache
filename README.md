@@ -121,19 +121,66 @@ curl http://localhost:8001/stats
 curl http://localhost:8001/health
 ```
 
-## 🧪 Running Tests
+## 🧪 Testing & Quality Assurance
+
+### Quick Test Commands
 
 ```bash
-# Run all tests
-python -m pytest tests/ -v
+# Install dependencies
+make install
 
-# Test just the hash ring
-python tests/test_hash_ring.py
+# Run all unit tests (fast)
+make test-unit
 
-# Test with coverage
-pip install pytest-cov
-python -m pytest tests/ --cov=src --cov-report=html
+# Run complete test suite
+make test
+
+# Run with coverage report
+make test-coverage
+
+# Check code quality
+make lint
 ```
+
+### Comprehensive Test Runner
+
+```bash
+# Run the complete test suite with detailed reporting
+python tests/test_runner.py
+```
+
+This generates a comprehensive report showing:
+- ✅ Unit test results (consistent hashing, storage, client logic)
+- 🚀 Performance benchmarks (ops/sec, latency measurements)
+- 📊 Code coverage analysis (line and branch coverage)
+- 🔍 Code quality checks (linting, style, type checking)
+- 🎯 Integration test results (end-to-end system behavior)
+
+### Test Categories
+
+**Unit Tests** (`make test-unit`)
+- `test_consistent_hash.py` - Hash ring algorithm correctness
+- `test_cache_node.py` - Storage engine and HTTP API
+- `test_client.py` - Smart client routing and fault tolerance
+
+**Integration Tests** (`make test-integration`)
+- `test_integration.py` - Full system end-to-end workflows
+- Multi-node cluster behavior
+- Fault tolerance scenarios
+- Performance under load
+
+**Performance Tests** (`make benchmark`)
+- Hash ring lookup performance (>10K ops/sec)
+- Cache operation throughput (>100 ops/sec)
+- Memory usage analysis
+- Latency measurements
+
+### Coverage Report
+
+After running `make test-coverage`, open `htmlcov/index.html` to see:
+- Line-by-line coverage analysis
+- Branch coverage details
+- Missing test coverage identification
 
 ## 🎮 Demo Scenarios
 
