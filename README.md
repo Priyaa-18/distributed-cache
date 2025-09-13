@@ -1,6 +1,6 @@
 # Distributed Cache System
 
-A scalable, fault-tolerant, in-memory distributed cache built with consistent hashing, replication, and TTL support. Demonstrates concepts from distributed systems such as horizontal scaling, CAP theorem trade-offs, and load distribution.
+A scalable, fault-tolerant, in-memory distributed cache built with consistent hashing, replication, and TTL support. It covers concepts from distributed systems such as horizontal scaling, CAP theorem trade-offs, and load distribution.
 
 ## Table of Contents
 - [Quick Start](#quick-start)
@@ -62,8 +62,8 @@ python src/demo.py
 │/health   │     │/health   │       │/health   │
 │/stats    │     │/stats    │       │/stats    │
 └────┬─────┘     └────┬─────┘       └────┬─────┘
-     │Replication      │Replication       │Replication
-     ▼                 ▼                  ▼
+     │Replication     │Replication       │Replication
+     ▼                ▼                  ▼
  ┌─────────┐      ┌─────────┐        ┌─────────┐
  │Replica 2│      │Replica 3│        │Replica 1│
  │ of N1   │      │ of N2   │        │ of N3   │
