@@ -22,7 +22,7 @@ A scalable, fault-tolerant, in-memory distributed cache built with consistent ha
 
 ```bash
 # Clone and setup
-git clone <https://github.com/Priyaa-18/distributed-cache.git>
+git clone https://github.com/Priyaa-18/distributed-cache.git
 cd distributed-cache
 pip install -r requirements.txt
 
