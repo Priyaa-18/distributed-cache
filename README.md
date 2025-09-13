@@ -1,20 +1,36 @@
 # Distributed Cache System
 
-A production-ready distributed cache implementation using **consistent hashing** for automatic data distribution and fault tolerance. Built to demonstrate core distributed systems concepts used by companies like Amazon (DynamoDB), Netflix, and Facebook.
+A scalable, fault-tolerant, in-memory distributed cache built with consistent hashing, replication, and TTL support. Demonstrates concepts from distributed systems such as horizontal scaling, CAP theorem trade-offs, and load distribution.
 
-## 🚀 Quick Start
+## Table of Contents
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Features](#features)
+- [Usage](#usage)
+- [Testing & Quality Assurance](#testing--quality-assurance)
+- [Benchmarked Performance](#benchmarked-performance)
+- [Consistent Hashing Deep Dive](#consistent-hashing-deep-dive)
+- [Real-World Extensions](#real-world-extensions)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Quick Start
+
+**Prerequisites:**
+- Python 3.7+
+- pip
 
 ```bash
 # Clone and setup
-git clone <your-repo-url>
+git clone <https://github.com/Priyaa-18/distributed-cache.git>
 cd distributed-cache
 pip install -r requirements.txt
 
-# Run the full demo (starts cluster automatically)
+# Run demo
 python src/demo.py
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
@@ -22,19 +38,36 @@ python src/demo.py
 │ Application │    │ Application │    │ Application │
 └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
        │                  │                  │
-       └──────────────────┼──────────────────┘
-                          │
-              ┌───────────▼───────────┐
-              │    Smart Client       │
-              │  (Consistent Hash)    │
-              └───────────┬───────────┘
-                          │
-        ┌─────────────────┼─────────────────┐
-        │                 │                 │
-   ┌────▼────┐       ┌────▼────┐       ┌────▼────┐
-   │ Node 1  │       │ Node 2  │       │ Node 3  │
-   │Port 8001│       │Port 8002│       │Port 8003│
-   └─────────┘       └─────────┘       └─────────┘
+       └───────────┬──────┴───────┬──────────┘
+                   │   Requests   │
+                   ▼              ▼
+          ┌────────────────────────────┐
+          │        Smart Client        │
+          │        (client.py)         │
+          │ - Consistent Hashing       │
+          │ - Request Routing          │
+          │ - Connection Pooling       │
+          │ - Replication Support      │
+          └───────────┬────────────────┘
+                      │
+     ┌────────────────┼───────────────────┐
+     │                │                   │
+┌────▼─────┐     ┌────▼─────┐       ┌────▼─────┐
+│  Node 1  │     │  Node 2  │       │  Node 3  │
+│ Port 8001│     │ Port 8002│       │ Port 8003│
+│  HTTP API│     │  HTTP API│       │  HTTP API│
+│ In-Memory│     │ In-Memory│       │ In-Memory│
+│  Storage │     │  Storage │       │  Storage │
+│  + TTL   │     │  + TTL   │       │  + TTL   │
+│/health   │     │/health   │       │/health   │
+│/stats    │     │/stats    │       │/stats    │
+└────┬─────┘     └────┬─────┘       └────┬─────┘
+     │Replication      │Replication       │Replication
+     ▼                 ▼                  ▼
+ ┌─────────┐      ┌─────────┐        ┌─────────┐
+ │Replica 2│      │Replica 3│        │Replica 1│
+ │ of N1   │      │ of N2   │        │ of N3   │
+ └─────────┘      └─────────┘        └─────────┘
 ```
 
 ### Key Components
@@ -44,7 +77,7 @@ python src/demo.py
 - **Smart Client**: Automatically routes requests to correct nodes using the hash ring
 - **Replication**: Stores multiple copies for fault tolerance
 
-## 🎯 Key Features
+## Features
 
 - **Distributed**: Scales horizontally by adding more nodes
 - **Consistent Hashing**: Adding/removing nodes only affects adjacent data ranges
@@ -53,15 +86,9 @@ python src/demo.py
 - **TTL Support**: Automatic expiration of cached data
 - **Replication**: Configurable data replication across multiple nodes
 - **REST API**: Standard HTTP interface for easy integration
+- **Testing**: Unit tests and integration testing approaches
 
-## 📊 Performance Characteristics
-
-- **Throughput**: 1000+ operations/second per node
-- **Latency**: < 1ms for cache hits
-- **Data Movement**: Only ~25% of data moves when adding a node (vs 100% with naive hashing)
-- **Memory Efficient**: Automatic cleanup of expired keys
-
-## 🔧 Manual Usage
+## Usage
 
 ### Start Individual Nodes
 
@@ -76,7 +103,7 @@ python src/cache_node.py server2 8002
 python src/cache_node.py server3 8003
 ```
 
-### Use the Client
+### Use the Python Client
 
 ```python
 from src.client import CacheClient
@@ -100,7 +127,7 @@ client.set("session:abc", "session_data", ttl=3600)
 client.set_with_replication("critical:data", "important", replicas=3)
 ```
 
-### HTTP API
+### Use the HTTP API
 
 ```bash
 # Store data
@@ -121,9 +148,9 @@ curl http://localhost:8001/stats
 curl http://localhost:8001/health
 ```
 
-## 🧪 Testing & Quality Assurance
+## Testing & Quality Assurance
 
-### Quick Test Commands
+### Quick Commands
 
 ```bash
 # Install dependencies
@@ -135,75 +162,72 @@ make test-unit
 # Run complete test suite
 make test
 
-# Run with coverage report
-make test-coverage
-
-# Check code quality
-make lint
+# Run system demo
+make run-demo
 ```
 
-### Comprehensive Test Runner
+### Test Coverage
 
+**Unit Tests (`test_hash_ring.py`)**
+- Consistent hashing algorithm correctness
+- Core hash ring functionality and load distribution
+- Data movement verification when scaling
+
+**Integration/Demo Tests (`demo.py`)** 
+- Complete system demonstration
+- Multi-node cluster setup and management
+- Fault tolerance simulation
+- End-to-end workflow testing
+
+### Running Specific Tests
 ```bash
-# Run the complete test suite with detailed reporting
-python tests/test_runner.py
+# Test hash ring algorithm
+python tests/test_hash_ring.py
+
+# Run complete system demo
+python src/demo.py
 ```
 
-This generates a comprehensive report showing:
-- ✅ Unit test results (consistent hashing, storage, client logic)
-- 🚀 Performance benchmarks (ops/sec, latency measurements)
-- 📊 Code coverage analysis (line and branch coverage)
-- 🔍 Code quality checks (linting, style, type checking)
-- 🎯 Integration test results (end-to-end system behavior)
+### Benchmarking Script
 
-### Test Categories
+```python3 -c "
+import sys
+sys.path.append('src')
+from consistent_hash import ConsistentHashRing
+import time
 
-**Unit Tests** (`make test-unit`)
-- `test_consistent_hash.py` - Hash ring algorithm correctness
-- `test_cache_node.py` - Storage engine and HTTP API
-- `test_client.py` - Smart client routing and fault tolerance
+print('Testing hash ring performance...')
+ring = ConsistentHashRing(['node1', 'node2', 'node3'])
+keys = [f'key_{i:06d}' for i in range(100000)]
 
-**Integration Tests** (`make test-integration`)
-- `test_integration.py` - Full system end-to-end workflows
-- Multi-node cluster behavior
-- Fault tolerance scenarios
-- Performance under load
+start = time.time()
+for key in keys:
+    ring.get_node(key)
+duration = time.time() - start
 
-**Performance Tests** (`make benchmark`)
-- Hash ring lookup performance (>10K ops/sec)
-- Cache operation throughput (>100 ops/sec)
-- Memory usage analysis
-- Latency measurements
+print(f'Hash ring lookups: {len(keys)/duration:,.0f} ops/sec')
+print(f'Average latency: {(duration/len(keys))*1000:.4f} ms')
+"
+```
 
-### Coverage Report
+## Benchmarked Performance
 
-After running `make test-coverage`, open `htmlcov/index.html` to see:
-- Line-by-line coverage analysis
-- Branch coverage details
-- Missing test coverage identification
+**Consistent Hashing Core:**
+- 1.07M+ hash ring lookups per second
+- Sub-millisecond latency (0.0009ms average)
+- 23.0% data movement when scaling (near-optimal)
 
-## 🎮 Demo Scenarios
+**Cache Node Operations:**
+- 669 writes/second via HTTP
+- 704 reads/second via HTTP  
+- Thread-safe concurrent access
 
-The `demo.py` script showcases:
+**Scaling Characteristics:**
+- Adding nodes causes minimal data redistribution
+- 92% efficiency compared to theoretical optimum
+- O(log n) lookup complexity
 
-1. **Basic Operations**: Store/retrieve data across multiple nodes
-2. **Consistent Hashing**: Even distribution and minimal data movement
-3. **Fault Tolerance**: System continues working when nodes fail
-4. **Performance**: Benchmark throughput and latency
-5. **Scaling**: Adding new nodes with minimal disruption
-
-## 🏭 Production Considerations
-
-For production use, consider adding:
-
-- **Persistence**: Write-ahead logs or periodic snapshots
-- **Authentication**: API keys or OAuth for security
-- **Monitoring**: Prometheus metrics and Grafana dashboards
-- **Load Balancing**: Multiple replicas behind a load balancer
-- **Configuration**: External config files for cluster topology
-- **Logging**: Structured logging with correlation IDs
-
-## 🔬 Consistent Hashing Deep Dive
+## Consistent Hashing Deep Dive
 
 The heart of this system is the consistent hashing algorithm:
 
@@ -219,44 +243,41 @@ server3: [234, 667, 1023, 1789, ...](150 positions)
 
 When adding a new server, only keys between specific ranges need to move, not the entire dataset.
 
-## 📚 Educational Value
+## Real-World Extensions
 
-This project demonstrates concepts essential for distributed systems:
+### Production Considerations
 
-- **Consistent Hashing**: Core algorithm in Amazon DynamoDB, Apache Cassandra
-- **Horizontal Scaling**: Add capacity by adding more nodes  
-- **Fault Tolerance**: Handle node failures gracefully
-- **Load Distribution**: Even distribution without hotspots
-- **CAP Theorem**: Trade-offs between consistency, availability, and partition tolerance
+- **Persistence**: Write-ahead logs or periodic snapshots
+- **Authentication**: API keys or OAuth for security
+- **Monitoring**: Prometheus metrics and Grafana dashboards
+- **Load Balancing**: Multiple replicas behind a load balancer
+- **Configuration**: External config files for cluster topology
+- **Logging**: Structured logging with correlation IDs
 
-## 🎯 Interview Preparation
-
-Perfect for discussing in system design interviews:
-
-- "How would you design a distributed cache like Redis Cluster?"
-- "How do you handle data distribution and replication?"
-- "What happens when nodes join or leave the cluster?"
-- "How do you ensure high availability?"
-
-## 📈 Scaling
+### Scaling
 
 - **Vertical**: Increase memory/CPU on existing nodes
 - **Horizontal**: Add more nodes to the ring
 - **Replication**: Increase replica count for higher availability
 - **Sharding**: Partition data across multiple independent clusters
 
-## 🤝 Contributing
+### Project Value
 
-1. Fork the repository
+- **Consistent Hashing**: Core algorithm in Amazon DynamoDB, Apache Cassandra
+- **Horizontal Scaling**: Add capacity by adding more nodes  
+- **Fault Tolerance**: Handle node failures gracefully
+- **CAP Theorem**: Trade-offs between consistency, availability, and partition tolerance
+
+## Contributing
+
+1. Fork the repo
 2. Create a feature branch
-3. Add tests for new functionality
+3. Add tests for new features
 4. Ensure all tests pass
-5. Submit a pull request
+5. Submit a PR
 
-## 📄 License
+## License
 
 MIT License - see LICENSE file for details.
 
 ---
-
-*Built with ❤️ to demonstrate distributed systems concepts*
