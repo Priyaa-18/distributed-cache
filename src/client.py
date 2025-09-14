@@ -2,8 +2,7 @@
 Distributed Cache Client
 
 A smart client that uses consistent hashing to automatically route
-requests to the correct cache node. This is the magic that makes
-distributed caching transparent to application developers.
+requests to the correct cache node. This should make distributed caching transparent to application developers.
 """
 
 import json
