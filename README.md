@@ -86,6 +86,7 @@ python src/demo.py
 - **TTL Support**: Automatic expiration of cached data
 - **Replication**: Configurable data replication across multiple nodes
 - **REST API**: Standard HTTP interface for easy integration
+- **Rate Limiting**: Configurable per-client limits (e.g., 3 requests per 10 seconds) to protect cache nodes from abuse
 - **Testing**: Unit tests and integration testing approaches
 
 ## Usage
@@ -126,6 +127,29 @@ client.set("session:abc", "session_data", ttl=3600)
 # Replication for fault tolerance
 client.set_with_replication("critical:data", "important", replicas=3)
 ```
+
+### Rate Limiting
+
+The client includes a built-in rate limiter (default: 10 requests per 5 seconds).  
+This prevents clients from overwhelming the cluster.
+
+```python
+from src.client import CacheClient
+
+# Configure client with rate limiting: 3 requests per 10 seconds
+client = CacheClient([
+    ("server1", 8001),
+    ("server2", 8002),
+    ("server3", 8003)
+], max_requests=3)
+
+# Example: first 3 succeed, 4th request blocked
+for i in range(5):
+    try:
+        client.set(f"user:{i}", {"name": f"Alice-{i}"})
+        print(f"Set user:{i}")
+    except Exception as e:
+        print(f"Request {i} blocked: {e}")
 
 ### Use the HTTP API
 
@@ -253,6 +277,8 @@ When adding a new server, only keys between specific ranges need to move, not th
 - **Load Balancing**: Multiple replicas behind a load balancer
 - **Configuration**: External config files for cluster topology
 - **Logging**: Structured logging with correlation IDs
+- **Distributed Rate Limiting**: Backed by Redis or a shared store for cluster-wide enforcement
+
 
 ### Scaling
 
