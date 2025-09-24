@@ -17,7 +17,7 @@ import signal
 import os
 import sys
 from typing import List
-from client import CacheClient
+from client import CacheClient, Client
 
 
 class CacheClusterManager:
@@ -360,7 +360,7 @@ def main():
             ("server1", 8001),
             ("server2", 8002),
             ("server3", 8003)
-        ])
+        ], max_requests=3)
         
         # Wait for cluster to be ready
         print("🔍 Checking cluster health...")

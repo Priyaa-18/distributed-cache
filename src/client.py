@@ -11,6 +11,8 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 from consistent_hash import ConsistentHashRing
 
+from rate_limiter import RateLimiter
+
 
 class CacheClient:
     """
@@ -20,7 +22,7 @@ class CacheClient:
     Handles node failures and provides a simple interface for applications.
     """
     
-    def __init__(self, nodes: List[Tuple[str, int]], timeout: float = 5.0):
+    def __init__(self, nodes: List[Tuple[str, int]], timeout: float = 5.0, max_requests=10):
         """
         Initialize the cache client.
         
@@ -31,6 +33,7 @@ class CacheClient:
         self.timeout = timeout
         self.nodes = {}  # node_id -> (host, port)
         self.hash_ring = ConsistentHashRing()
+        self.limiter = RateLimiter(max_requests, timeout)
         
         # Add all nodes to the hash ring
         for node_id, port in nodes:
@@ -48,6 +51,7 @@ class CacheClient:
         Automatically routes to the correct node based on consistent hashing.
         Returns None if the key doesn't exist or the node is unreachable.
         """
+        self._check_rate_limit(key)
         node_id = self.hash_ring.get_node(key)
         if not node_id:
             raise Exception("No nodes available in hash ring")
@@ -78,6 +82,7 @@ class CacheClient:
         Automatically routes to the correct node based on consistent hashing.
         Returns True if successful, False otherwise.
         """
+        self._check_rate_limit(key)
         node_id = self.hash_ring.get_node(key)
         if not node_id:
             raise Exception("No nodes available in hash ring")
@@ -135,6 +140,10 @@ class CacheClient:
             print(f"Network error deleting key '{key}' from {node_id}: {e}")
             return False
     
+    def _check_rate_limit(self, key: str):
+        if not self.limiter.allow("client"):
+            raise Exception("Rate limit exceeded")
+        
     def get_with_replication(self, key: str, read_quorum: int = 1) -> Optional[Any]:
         """
         Get a value with replication support.
